@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">EcoGreen</string>
-    <!-- TODO: Remove or change this placeholder text -->
+
+    <string name="map_id">17d47ef905ff2859</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
