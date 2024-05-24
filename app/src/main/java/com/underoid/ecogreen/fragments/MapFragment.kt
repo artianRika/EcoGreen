@@ -5,6 +5,8 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -19,6 +21,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.underoid.ecogreen.GlobalVars
@@ -177,7 +181,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun placeMarker(latLng: LatLng) {
 
-        gMap.addMarker(MarkerOptions().position(latLng).title("Current Location"))
+        val markerBitmap = BitmapFactory.decodeResource(resources, R.drawable.ic_pin)
+        val scaledMarkerBitmap = Bitmap.createScaledBitmap(markerBitmap, 80, 102, false)
+        val markerIcon = BitmapDescriptorFactory.fromBitmap(scaledMarkerBitmap)
+
+        gMap.addMarker(MarkerOptions().position(latLng).title("Current Location").icon(
+            markerIcon
+        ))
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
 
     }
