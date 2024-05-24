@@ -3,13 +3,13 @@
 
     <item android:title="Home"
         android:id="@+id/homeFragment"
-        android:icon="@mipmap/ic_launcher"/>
+        android:icon="@drawable/ic_home"/>
 
     <item android:title="Map"
         android:id="@+id/mapFragment"
-        android:icon="@mipmap/ic_launcher"/>
+        android:icon="@drawable/ic_map"/>
 
     <item android:title="Account"
         android:id="@+id/accountFragment"
-        android:icon="@mipmap/ic_launcher"/>
+        android:icon="@drawable/ic_account"/>
 </menu>

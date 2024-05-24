@@ -13,11 +13,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
         val homeFragment = HomeFragment()
         val mapFragment = MapFragment()
         val accountFragment = AccountFragment()
+        setCurrentFragment(homeFragment)
 
-    val bottomNavView = findViewById<BottomNavigationView>(R.id.bottomNavView)
+        val bottomNavView = findViewById<BottomNavigationView>(R.id.bottomNavView)
 
         bottomNavView.setOnNavigationItemSelectedListener {
             when(it.itemId){
@@ -36,5 +38,6 @@ class MainActivity : AppCompatActivity() {
             replace(R.id.frameLayout, fragment)
             commit()
         }
+
     }
 }
