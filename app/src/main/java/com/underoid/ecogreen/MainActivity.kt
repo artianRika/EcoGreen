@@ -19,7 +19,6 @@ class MainActivity : AppCompatActivity() {
 
     val bottomNavView = findViewById<BottomNavigationView>(R.id.bottomNavView)
 
-        bottomNavView.getMenu().getItem(0).setChecked(true);
         bottomNavView.setOnNavigationItemSelectedListener {
             when(it.itemId){
                 R.id.homeFragment ->setCurrentFragment(homeFragment)
