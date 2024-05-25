@@ -4,6 +4,7 @@ object GlobalVars {
     var dialogName: String = ""
     var dialogLocation: String = ""
     var dialogPhotoURI: String = ""
+    var latLngListSize: Int = 0
 
     fun setDiName(name: String){
         dialogName = name
@@ -15,6 +16,10 @@ object GlobalVars {
         dialogPhotoURI = uri
     }
 
+    fun setLatLngListSizee(size: Int){
+        latLngListSize = size
+    }
+
     fun getDiName(): String{
         return dialogName
     }
@@ -23,6 +28,9 @@ object GlobalVars {
     }
     fun getDiURI(): String{
         return dialogPhotoURI
+    }
+    fun getLatLngListSizee() : Int{
+        return latLngListSize
     }
 
 }

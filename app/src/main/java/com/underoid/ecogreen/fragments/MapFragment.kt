@@ -7,15 +7,20 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Location
 import android.os.Bundle
+import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import coil.load
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -24,11 +29,12 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.underoid.ecogreen.GlobalVars
 import com.underoid.ecogreen.R
 
-class MapFragment : Fragment(), OnMapReadyCallback {
+class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private lateinit var gMap: GoogleMap
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -58,12 +64,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         markSpotBtn.setOnClickListener {
             showMarkSpotDialog()
 
-
-
         }
 
         return view
     }
+
 
     private fun showMarkSpotDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom, null)
@@ -74,7 +79,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
-            .setTitle("Mark Spot")
+            .setTitle("Mark My Spot")
             .setNegativeButton("Cancel", null)
             .create()
 
@@ -93,6 +98,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             GlobalVars.setDiLocation(location)
 
             getCurrentLocation()
+
 
 
             latLngList.forEach{item ->
@@ -114,13 +120,43 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    private fun showMarkerClickedDialog() {
+
+            val dialogBuilder = AlertDialog.Builder(requireContext())
+
+            val dialogView = layoutInflater.inflate(R.layout.dialog_marker_details, null)
+
+            val fullNameTextView = dialogView.findViewById<TextView>(R.id.tv_FullName)
+            val locationTextView = dialogView.findViewById<TextView>(R.id.tv_Location)
+            val img = dialogView.findViewById<ImageView>(R.id.image)
+
+            fullNameTextView.text = GlobalVars.getDiName()
+            locationTextView.text = GlobalVars.getDiLocation()
+
+        img.load("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg")
+        {
+            placeholder(R.drawable.loading_img)
+            error(R.color.red)
+        }
+
+
+            dialogBuilder.setView(dialogView)
+
+            val alertDialog = dialogBuilder.create()
+            alertDialog.show()
+    }
+
     override fun onMapReady(googleMap: GoogleMap) {
         gMap = googleMap
 
+        gMap.setOnMarkerClickListener(this)
+
+       // GlobalVars.setLatLngListSizee(latLngList.size)
         latLngList.forEach{item ->
             placeMarker(item)
         }
     }
+
 
     private fun getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(
@@ -155,6 +191,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     lat = location.latitude
                     lng = location.longitude
 
+                    if (isLocationWithinRadius(currentLatLng, latLngList, 100)) {
+                        Toast.makeText(requireContext(), "Location exists within 100 meters", Toast.LENGTH_LONG).show()
+                    }
+
                     //post in 'locations/:id'
 
                     Toast.makeText(
@@ -179,6 +219,24 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             }
     }
 
+
+    private fun isLocationWithinRadius(currentLatLng: LatLng, locations: List<LatLng>, radius: Int): Boolean {
+        val results = FloatArray(1)
+        for (location in locations) {
+            Location.distanceBetween(
+                currentLatLng.latitude,
+                currentLatLng.longitude,
+                location.latitude,
+                location.longitude,
+                results
+            )
+            if (results[0] <= radius) {
+                return true
+            }
+        }
+        return false
+    }
+
     private fun placeMarker(latLng: LatLng) {
 
         val markerBitmap = BitmapFactory.decodeResource(resources, R.drawable.ic_pin)
@@ -190,5 +248,24 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         ))
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
 
+    }
+
+    override fun onMarkerClick(marker: Marker): Boolean {
+
+        showMarkerClickedDialog()
+
+
+
+
+            // Return true to indicate that the click event has been consumed
+            return true
+        }
+
+
+
+    override fun onPause() {
+        super.onPause()
+
+        GlobalVars.setLatLngListSizee(latLngList.size)
     }
 }

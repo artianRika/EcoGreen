@@ -51,5 +51,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("io.coil-kt:coil:1.4.0")
 
 }

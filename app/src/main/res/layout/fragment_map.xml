@@ -13,6 +13,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
 
+
+
     map:cameraBearing="0"
     map:cameraTargetLat="42.006191"
     map:cameraTargetLng="20.959682"
@@ -30,7 +32,7 @@
         android:id="@+id/btn_markSpot"
         android:layout_width="190dp"
         android:layout_height="70dp"
-        android:text="Mark Spot"
+        android:text="Mark My Spot"
         android:textStyle="bold"
         android:layout_gravity="center|bottom"
         android:layout_marginBottom="12dp"
