@@ -126,30 +126,26 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         }
     }
 
-    private fun showMarkerClickedDialog() {
+    private fun showMarkerClickedDialog(fullName: String, locationName: String) {
+        val dialogBuilder = AlertDialog.Builder(requireContext())
+        val dialogView = layoutInflater.inflate(R.layout.dialog_marker_details, null)
 
-            val dialogBuilder = AlertDialog.Builder(requireContext())
+        val fullNameTextView = dialogView.findViewById<TextView>(R.id.tv_FullName)
+        val locationTextView = dialogView.findViewById<TextView>(R.id.tv_Location)
+        val img = dialogView.findViewById<ImageView>(R.id.image)
 
-            val dialogView = layoutInflater.inflate(R.layout.dialog_marker_details, null)
+        fullNameTextView.text = fullName
+        locationTextView.text = locationName
 
-            val fullNameTextView = dialogView.findViewById<TextView>(R.id.tv_FullName)
-            val locationTextView = dialogView.findViewById<TextView>(R.id.tv_Location)
-            val img = dialogView.findViewById<ImageView>(R.id.image)
-
-            fullNameTextView.text = "Full Name"
-            locationTextView.text = "Location"
-
-        img.load("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg")
-        {
+        img.load("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg") {
             placeholder(R.drawable.loading_img)
             error(R.color.red)
         }
 
+        dialogBuilder.setView(dialogView)
 
-            dialogBuilder.setView(dialogView)
-
-            val alertDialog = dialogBuilder.create()
-            alertDialog.show()
+        val alertDialog = dialogBuilder.create()
+        alertDialog.show()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -263,14 +259,36 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        showMarkerClickedDialog()
+        val latLng = marker.position
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val call = RetrofitInstance.instance.getLocations()
+            val response = call.execute()
+            withContext(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    response.body()?.let { locations ->
+                        val clickedLocation = locations.find { it.lat == latLng.latitude && it.lng == latLng.longitude }
+                        if (clickedLocation != null) {
+                            val name = clickedLocation.fullName
+                            val location = clickedLocation.locationName
+                            showMarkerClickedDialog(name, location)
+                        } else {
+                            // Handle case where the location for the clicked marker is not found
+                            Toast.makeText(requireContext(), "Location not found", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Failed to fetch locations", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
         return true
     }
 
     private fun fetchLocations(){
         CoroutineScope(Dispatchers.IO).launch {
             val call = RetrofitInstance.instance.getLocations()
-            val response = call.execute()  // Execute the call synchronously on the IO thread
+            val response = call.execute()
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
                     response.body()?.let { locations ->
