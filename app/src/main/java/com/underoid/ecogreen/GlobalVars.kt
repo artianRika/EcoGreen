@@ -6,6 +6,7 @@ object GlobalVars {
     var dialogPhotoURI: String = ""
     var latLngListSize: Int = 0
 
+
     fun setDiName(name: String){
         dialogName = name
     }

@@ -20,6 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,6 +32,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.underoid.ecogreen.GlobalPostId
 import com.underoid.ecogreen.GlobalVars
 import com.underoid.ecogreen.R
 import com.underoid.ecogreen.network.RetrofitInstance
@@ -51,6 +53,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
     var latLngList = mutableListOf<LatLng>()
 
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -61,6 +64,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         mapFragment.getMapAsync(this)
 
 
+        GlobalPostId.init(requireContext())
 
         val markSpotBtn: Button = view.findViewById(R.id.btn_markSpot)
         markSpotBtn.setOnClickListener {
@@ -102,6 +106,29 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
             GlobalVars.setDiName(fullName)
             GlobalVars.setDiLocation(location)
+
+
+            val location1 = com.underoid.ecogreen.model.Location(
+                id = GlobalPostId.getPostID(),
+                fullName = fullName,
+                locationName = location,
+                lat = 41.99508574881643,
+                lng = 20.951255849619003
+            )
+
+            GlobalPostId.incrementPostID()
+            val apiService = RetrofitInstance.instance
+
+
+            lifecycleScope.launch {
+                try {
+                    apiService.sendLocation(location1.id, location1)
+                    Toast.makeText(requireContext(), "Location added by ${fullName}", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Unable to add the location", Toast.LENGTH_LONG).show()
+                }
+            }
+
 
             getCurrentLocation()
 
@@ -273,7 +300,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
                             val location = clickedLocation.locationName
                             showMarkerClickedDialog(name, location)
                         } else {
-                            // Handle case where the location for the clicked marker is not found
+
                             Toast.makeText(requireContext(), "Location not found", Toast.LENGTH_LONG).show()
                         }
                     }
