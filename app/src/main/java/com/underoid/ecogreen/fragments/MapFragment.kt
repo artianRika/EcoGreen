@@ -48,13 +48,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
     var lat: Double = 41.0
     var lng: Double = 20.0
 
-    var latLngList = mutableListOf(
-        LatLng( 41.9903221253715,20.9589318208824),
-        LatLng(  41.9937660780103,20.9569714025797),
-        LatLng( 41.9954732674999,20.960100150982),
-        )
+    var latLngList = mutableListOf<LatLng>()
 
-    var tempList = (com.underoid.ecogreen.model.Location(0, "nn", "ll", 0.0, 0.0))
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
