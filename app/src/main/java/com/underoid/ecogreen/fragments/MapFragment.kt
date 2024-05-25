@@ -108,29 +108,10 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
             GlobalVars.setDiLocation(location)
 
 
-            val location1 = com.underoid.ecogreen.model.Location(
-                id = GlobalPostId.getPostID(),
-                fullName = fullName,
-                locationName = location,
-                lat = 41.99508574881643,
-                lng = 20.951255849619003
-            )
-
-            GlobalPostId.incrementPostID()
-            val apiService = RetrofitInstance.instance
 
 
-            lifecycleScope.launch {
-                try {
-                    apiService.sendLocation(location1.id, location1)
-                    Toast.makeText(requireContext(), "Location added by ${fullName}", Toast.LENGTH_LONG).show()
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(), "Unable to add the location", Toast.LENGTH_LONG).show()
-                }
-            }
 
-
-            getCurrentLocation()
+            getCurrentLocation(fullName, location)
 
 
 
@@ -193,7 +174,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         }
     }
 
-    private fun getCurrentLocation() {
+    private fun getCurrentLocation(fullName: String, locationName: String) {
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -228,9 +209,32 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
                     if (isLocationWithinRadius(currentLatLng, latLngList, 100)) {
                         Toast.makeText(requireContext(), "Location exists within 100 meters", Toast.LENGTH_LONG).show()
+                        return@addOnSuccessListener
                     }
 
+
                     //post in 'locations/:id'
+
+                    val location1 = com.underoid.ecogreen.model.Location(
+                        id = GlobalPostId.getPostID(),
+                        fullName = fullName,
+                        locationName = locationName,
+                        lat = lat,
+                        lng = lng
+                    )
+
+                    GlobalPostId.incrementPostID()
+                    val apiService = RetrofitInstance.instance
+
+
+                    lifecycleScope.launch {
+                        try {
+                            apiService.sendLocation(location1.id, location1)
+                            Toast.makeText(requireContext(), "Location added by ${fullName}", Toast.LENGTH_LONG).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(requireContext(), "Unable to add the location", Toast.LENGTH_LONG).show()
+                        }
+                    }
 
                     Toast.makeText(
                         requireContext(),
