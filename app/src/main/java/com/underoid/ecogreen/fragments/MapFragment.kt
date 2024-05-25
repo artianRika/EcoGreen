@@ -33,6 +33,11 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.underoid.ecogreen.GlobalVars
 import com.underoid.ecogreen.R
+import com.underoid.ecogreen.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -48,6 +53,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         LatLng(  41.9937660780103,20.9569714025797),
         LatLng( 41.9954732674999,20.960100150982),
         )
+
+    var tempList = (com.underoid.ecogreen.model.Location(0, "nn", "ll", 0.0, 0.0))
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -69,6 +76,10 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         return view
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        fetchLocations()
+    }
 
     private fun showMarkSpotDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom, null)
@@ -130,8 +141,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
             val locationTextView = dialogView.findViewById<TextView>(R.id.tv_Location)
             val img = dialogView.findViewById<ImageView>(R.id.image)
 
-            fullNameTextView.text = GlobalVars.getDiName()
-            locationTextView.text = GlobalVars.getDiLocation()
+            fullNameTextView.text = "Full Name"
+            locationTextView.text = "Location"
 
         img.load("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg")
         {
@@ -157,6 +168,12 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         }
     }
 
+    private fun updateMapMarkers() {
+     //   gMap.clear() //CHECKKKK
+        latLngList.forEach { item ->
+            placeMarker(item)
+        }
+    }
 
     private fun getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(
@@ -251,16 +268,26 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-
         showMarkerClickedDialog()
+        return true
+    }
 
-
-
-
-            // Return true to indicate that the click event has been consumed
-            return true
+    private fun fetchLocations(){
+        CoroutineScope(Dispatchers.IO).launch {
+            val call = RetrofitInstance.instance.getLocations()
+            val response = call.execute()  // Execute the call synchronously on the IO thread
+            withContext(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    response.body()?.let { locations ->
+                        latLngList = locations.map { LatLng(it.lat, it.lng) }.toMutableList()
+                        updateMapMarkers()
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Failed to fetch locations", Toast.LENGTH_LONG).show()
+                }
+            }
         }
-
+    }
 
 
     override fun onPause() {
