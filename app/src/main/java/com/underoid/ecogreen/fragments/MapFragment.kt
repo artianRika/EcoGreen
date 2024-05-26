@@ -8,9 +8,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
-import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,7 +26,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
@@ -37,8 +34,6 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
 import com.underoid.ecogreen.GlobalPostId
 import com.underoid.ecogreen.GlobalVars
 import com.underoid.ecogreen.R
@@ -47,7 +42,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.UUID
 
 class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -143,47 +137,12 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         if (requestCode == PHOTO_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val selectedImageUri = data?.data
             selectedImageUri?.let {
-                uploadImageToFirestore(it)
+                GlobalVars.setDiPhotoURI(it.toString())
             }
         }
     }
 
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
-    private val storageRef: StorageReference = storage.reference
-    private fun uploadImageToFirestore(imageUri: Uri) {
-        val imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
 
-        val uploadTask = imageRef.putFile(imageUri)
-
-        uploadTask.addOnSuccessListener { taskSnapshot ->
-            // Image uploaded successfully, get the download URL
-            imageRef.downloadUrl.addOnSuccessListener { uri ->
-                val imageUrl = uri.toString()
-                // Now you have the URL of the uploaded image (imageUrl)
-                // Store this URL in Firestore
-                storeImageUrlInFirestore(imageUrl)
-            }
-        }.addOnFailureListener { e ->
-            // Handle any errors
-            Toast.makeText(requireContext(), "Failed to upload image: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-    private fun storeImageUrlInFirestore(imageUrl: String) {
-        val imageMap = hashMapOf(
-            "imageUrl" to imageUrl
-        )
-
-        // Add a new document with a generated ID
-        db.collection("images")
-            .add(imageMap)
-            .addOnSuccessListener { documentReference ->
-                Toast.makeText(requireContext(), "Image uploaded successfully", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener { e ->
-                // Handle any errors
-                Toast.makeText(requireContext(), "Failed to upload image: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
 
     private fun showMarkerClickedDialog(fullName: String, locationName: String) {
         val dialogBuilder = AlertDialog.Builder(requireContext())
@@ -196,9 +155,19 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         fullNameTextView.text = fullName
         locationTextView.text = locationName
 
-        img.load("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg") {
-            placeholder(R.drawable.loading_img)
-            error(R.color.red)
+        //"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg"
+        //"https://media.npr.org/assets/img/2024/02/15/gettyimages-1667686009_custom-9ad258beb4659badfee363cb8635344a98f58640.jpg?s=1300&c=85&f=webp"
+        if(GlobalVars.getDiURI() == ""){
+            img.load("https://media.npr.org/assets/img/2024/02/15/gettyimages-1667686009_custom-9ad258beb4659badfee363cb8635344a98f58640.jpg?s=1300&c=85&f=webp") {
+                placeholder(R.drawable.loading_img)
+                error(R.color.red)
+            }
+        }else{
+
+            img.load(GlobalVars.getDiURI()) {
+                placeholder(R.drawable.loading_img)
+                error(R.color.red)
+            }
         }
 
         dialogBuilder.setView(dialogView)
