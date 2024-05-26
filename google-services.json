@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "599719530675",
+    "project_id": "ecogreen-c6251",
+    "storage_bucket": "ecogreen-c6251.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599719530675:android:b8659186ab26af53fd20c6",
+        "android_client_info": {
+          "package_name": "com.underoid.ecogreen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1uPcu6ITlLkKWL6nGtE5jQkKBZAUJsP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.FirebaseApp
 import com.underoid.ecogreen.GlobalPostId
 import com.underoid.ecogreen.GlobalVars
 import com.underoid.ecogreen.R
@@ -78,6 +79,8 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         fetchLocations()
+
+        FirebaseApp.initializeApp(requireContext())
     }
 
     private fun showMarkSpotDialog() {
