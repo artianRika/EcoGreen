@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.view.LayoutInflater
@@ -33,6 +34,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.FirebaseApp
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.underoid.ecogreen.GlobalPostId
 import com.underoid.ecogreen.GlobalVars
 import com.underoid.ecogreen.R
@@ -41,6 +47,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -53,12 +60,19 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
     var latLngList = mutableListOf<LatLng>()
 
-
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+
+        // Initialize Firebase
+        FirebaseApp.initializeApp(requireContext())
+        // Get reference to Firestore
+        db = Firebase.firestore
+
 
         val view = inflater.inflate(R.layout.fragment_map, container, false)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
@@ -66,6 +80,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
 
         GlobalPostId.init(requireContext())
+
+
+
 
         val markSpotBtn: Button = view.findViewById(R.id.btn_markSpot)
         markSpotBtn.setOnClickListener {
@@ -79,8 +96,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         fetchLocations()
-
-        FirebaseApp.initializeApp(requireContext())
     }
 
     private fun showMarkSpotDialog() {
@@ -111,11 +126,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
             GlobalVars.setDiLocation(location)
 
 
-
-
-
             getCurrentLocation(fullName, location)
-
 
 
             latLngList.forEach{item ->
@@ -131,10 +142,47 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PHOTO_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val selectedImageUri = data?.data
-
-            GlobalVars.setDiPhotoURI(selectedImageUri.toString())
-
+            selectedImageUri?.let {
+                uploadImageToFirestore(it)
+            }
         }
+    }
+
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+    private val storageRef: StorageReference = storage.reference
+    private fun uploadImageToFirestore(imageUri: Uri) {
+        val imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
+
+        val uploadTask = imageRef.putFile(imageUri)
+
+        uploadTask.addOnSuccessListener { taskSnapshot ->
+            // Image uploaded successfully, get the download URL
+            imageRef.downloadUrl.addOnSuccessListener { uri ->
+                val imageUrl = uri.toString()
+                // Now you have the URL of the uploaded image (imageUrl)
+                // Store this URL in Firestore
+                storeImageUrlInFirestore(imageUrl)
+            }
+        }.addOnFailureListener { e ->
+            // Handle any errors
+            Toast.makeText(requireContext(), "Failed to upload image: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun storeImageUrlInFirestore(imageUrl: String) {
+        val imageMap = hashMapOf(
+            "imageUrl" to imageUrl
+        )
+
+        // Add a new document with a generated ID
+        db.collection("images")
+            .add(imageMap)
+            .addOnSuccessListener { documentReference ->
+                Toast.makeText(requireContext(), "Image uploaded successfully", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                // Handle any errors
+                Toast.makeText(requireContext(), "Failed to upload image: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun showMarkerClickedDialog(fullName: String, locationName: String) {
@@ -164,14 +212,14 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
         gMap.setOnMarkerClickListener(this)
 
-       // GlobalVars.setLatLngListSizee(latLngList.size)
+        // GlobalVars.setLatLngListSizee(latLngList.size)
         latLngList.forEach{item ->
             placeMarker(item)
         }
     }
 
     private fun updateMapMarkers() {
-     //   gMap.clear() //CHECKKKK
+        //   gMap.clear() //CHECKKKK
         latLngList.forEach { item ->
             placeMarker(item)
         }
@@ -335,6 +383,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
             }
         }
     }
+
 
 
     override fun onPause() {
